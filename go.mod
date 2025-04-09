@@ -1,3 +1,3 @@
-module github.com/maxskold/projectTemplate
+module github.com/MaxSkold/projectTemplate
 
 go 1.24
