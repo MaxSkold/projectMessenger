@@ -8,8 +8,6 @@ import (
 
 var ErrNotFound = errors.New("credentials not found")
 
-const ConnStr = "postgres://postgres:qwerty@localhost:5432/postgres?sslmode=disable"
-
 type (
 	CredRepo interface {
 		GetCredentialsByID(id string) (*Credentials, error)
