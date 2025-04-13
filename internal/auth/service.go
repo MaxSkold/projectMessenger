@@ -13,15 +13,7 @@ func NewServiceAuth(repo CredRepo) *ServiceAuth {
 	return &ServiceAuth{repo}
 }
 
-// Authentication
-
-func CheckPasswordHash(password, hash string) bool {
-	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)) == nil
-}
-
-// TODO ...
-
-// Register or update credentials
+// Common functions
 
 func HashPassword(password string) (string, error) {
 	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -30,6 +22,15 @@ func HashPassword(password string) (string, error) {
 	}
 	return string(hashedBytes), nil
 }
+func CheckPasswordHash(password, hash string) bool {
+	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)) == nil
+}
+
+// Authentication
+
+// TODO ...
+
+// Register or update credentials
 
 func (s *ServiceAuth) RegisterUser(c *CredsInput) (*Credentials, error) {
 	_, err := s.repo.FindByEmail(c.Email)
@@ -51,7 +52,6 @@ func (s *ServiceAuth) RegisterUser(c *CredsInput) (*Credentials, error) {
 
 	return creds, nil
 }
-
 func (s *ServiceAuth) UpdatePassword(userid, oldPassword, newPassword string) error {
 	creds, err := s.repo.GetCredentialsByID(userid)
 	if err != nil {
@@ -77,6 +77,6 @@ func (s *ServiceAuth) UpdatePassword(userid, oldPassword, newPassword string) er
 	return s.repo.SaveCreds(updatedCred)
 }
 
-// User forgot a password ,_,
+// User have forgotten the password ,_,
 
 // TODO ...

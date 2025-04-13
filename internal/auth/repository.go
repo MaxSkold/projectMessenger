@@ -8,6 +8,8 @@ import (
 
 var ErrNotFound = errors.New("credentials not found")
 
+const ConnStr = "postgres://postgres:qwerty@localhost:5432/postgres?sslmode=disable"
+
 type (
 	CredRepo interface {
 		GetCredentialsByID(id string) (*Credentials, error)
@@ -28,23 +30,38 @@ type (
 
 // ------------------ Work with PSQL database ----------------------
 
-func NewPostgresCredRepo(db *sql.DB) *PostgresCredRepo {
+func NewPostgresCredRepo(connStr string) (*PostgresCredRepo, error) {
+	db, err := sql.Open("postgres", connStr)
+	if err != nil {
+		return nil, err
+	}
+	if err = db.Ping(); err != nil {
+		return nil, err
+	}
+
 	return &PostgresCredRepo{
 		db: db,
-	}
+	}, nil
 }
 
-func (repo *PostgresCredRepo) GetCredentialsByID(id string) (*Credentials, error) {
-	// TODO: реализация через INSERT INTO ...
+func (psql *PostgresCredRepo) GetCredentialsByID(id string) (*Credentials, error) {
+	psql.mu.Lock()
+	defer psql.mu.Unlock()
+
 	return nil, nil
 }
-func (repo *PostgresCredRepo) SaveCreds(cred *Credentials) error {
-	// TODO: реализация через SELECT ... WHERE credential_id = $1
+func (psql *PostgresCredRepo) SaveCreds(cred *Credentials) error {
+	psql.mu.Lock()
+	defer psql.mu.Unlock()
+
 	return nil
 }
-func (repo *PostgresCredRepo) FindByEmail(email string) (*Credentials, error) {
+func (psql *PostgresCredRepo) FindByEmail(email string) (*Credentials, error) {
 	// TODO ...
 	return nil, nil
+}
+func (psql *PostgresCredRepo) RemoveCreds(id string) error {
+	return nil
 }
 
 // ----------------- Work with Map (in-memory) ---------------------

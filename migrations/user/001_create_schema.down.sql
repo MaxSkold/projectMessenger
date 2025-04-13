@@ -1,0 +1,4 @@
+-- SCHEMA: user
+
+CREATE SCHEMA IF NOT EXISTS "user"
+    AUTHORIZATION postgres;

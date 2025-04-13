@@ -1,0 +1,3 @@
+-- SCHEMA: auth
+
+DROP SCHEMA IF EXISTS auth;
