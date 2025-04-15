@@ -23,7 +23,7 @@ func main() {
 	handler := auth.NewAuthHeader(service)
 
 	r := router.New()
-	r.POST("/signup", handler.SignUpHandler)
+	r.POST("/api/signup", handler.SignUpHandler)
 
 	log.Println("Server is listening :8080 port")
 	if err := fasthttp.ListenAndServe(":8080", r.Handler); err != nil {
