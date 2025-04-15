@@ -11,7 +11,7 @@ import (
 type CredsInput struct {
 	Email       string `json:"email"`
 	PhoneNumber string `json:"phone_number"`
-	Password    string `json:"Password"`
+	Password    string `json:"password"`
 }
 
 type Credentials struct {

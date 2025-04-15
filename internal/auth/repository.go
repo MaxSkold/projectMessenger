@@ -7,6 +7,7 @@ import (
 )
 
 var ErrNotFound = errors.New("credentials not found")
+var ErrAlreadyExists = errors.New("user already exists")
 
 type (
 	CredRepo interface {
@@ -35,20 +36,28 @@ func NewPostgresCredRepo(db *gorm.DB) *PostgresCredRepo {
 }
 
 func (psql *PostgresCredRepo) GetCredentialsByID(id string) (*Credentials, error) {
-	psql.mu.Lock()
-	defer psql.mu.Unlock()
+	psql.mu.RLock()
+	defer psql.mu.RUnlock()
 
-	return nil, nil
+	var cred Credentials
+	if err := psql.db.Where("user_id = ?", id).First(&cred).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+
+	return &cred, nil
 }
 func (psql *PostgresCredRepo) SaveCreds(cred *Credentials) error {
 	psql.mu.Lock()
 	defer psql.mu.Unlock()
 
-	return psql.db.Create(&cred).Error
+	return psql.db.Save(&cred).Error
 }
 func (psql *PostgresCredRepo) FindByEmail(email string) (*Credentials, error) {
-	psql.mu.Lock()
-	defer psql.mu.Unlock()
+	psql.mu.RLock()
+	defer psql.mu.RUnlock()
 
 	var cred Credentials
 	if err := psql.db.Where("email = ?", email).First(&cred).Error; err != nil {
@@ -61,7 +70,10 @@ func (psql *PostgresCredRepo) FindByEmail(email string) (*Credentials, error) {
 	return &cred, nil
 }
 func (psql *PostgresCredRepo) RemoveCreds(id string) error {
-	return nil
+	psql.mu.Lock()
+	defer psql.mu.Unlock()
+
+	return psql.db.Delete(&Credentials{}, id).Error
 }
 
 // ----------------- Work with Map (in-memory) ---------------------

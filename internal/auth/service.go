@@ -36,7 +36,7 @@ func CheckPasswordHash(password, hash string) bool {
 func (s *ServiceAuth) RegisterUser(c *CredsInput) error {
 	_, err := s.repo.FindByEmail(c.Email)
 	if err == nil {
-		return errors.New("user with this Email already exists")
+		return ErrAlreadyExists
 	}
 	if !errors.Is(err, ErrNotFound) {
 		return err

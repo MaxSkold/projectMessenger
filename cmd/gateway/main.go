@@ -20,13 +20,13 @@ func main() {
 	//repo := auth.NewMapsCredRepo()
 	repo := auth.NewPostgresCredRepo(db)
 	service := auth.NewServiceAuth(repo)
-	handler := auth.NewAuthHeader(service)
+	handler := auth.NewAuthHandler(service)
 
 	r := router.New()
-	r.POST("/signup", handler.SignUpHandler)
+	r.POST("/api/signup", handler.SignUpHandler)
 
 	log.Println("Server is listening :8080 port")
-	if err := fasthttp.ListenAndServe(":8080", r.Handler); err != nil {
+	if err := fasthttp.ListenAndServe(":8080", corsMiddleware(r.Handler)); err != nil {
 		panic(err)
 	}
 	log.Println("App is running")
@@ -44,4 +44,20 @@ func connectDB() (*gorm.DB, error) {
 	}
 
 	return db, nil
+}
+
+func corsMiddleware(next fasthttp.RequestHandler) fasthttp.RequestHandler {
+	return func(ctx *fasthttp.RequestCtx) {
+		ctx.Response.Header.Set("Access-Control-Allow-Origin", "http://localhost:5173") // или "*" для всех
+		ctx.Response.Header.Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		ctx.Response.Header.Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		ctx.Response.Header.Set("Access-Control-Allow-Credentials", "true")
+
+		if string(ctx.Method()) == "OPTIONS" {
+			ctx.SetStatusCode(fasthttp.StatusOK)
+			return
+		}
+
+		next(ctx)
+	}
 }
