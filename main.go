@@ -3,39 +3,38 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"github.com/MaxSkold/projectMessenger/internal/auth"
 	"github.com/MaxSkold/projectMessenger/internal/config"
+	"github.com/fasthttp/router"
 	"github.com/valyala/fasthttp"
 	"log"
 )
 
-func requestHandler(ctx *fasthttp.RequestCtx) {
-	_, err := ctx.WriteString("Hello World")
-	if err != nil {
-		log.Printf("Error in requestHandler: %v", err)
-	}
-}
-
 func main() {
-	db, err := connectDB()
-	if err != nil {
-		log.Fatalf("Error: %v", err)
-	}
+	//db, err := connectDB()
+	//if err != nil {
+	//	log.Fatalf("Error: %v", err)
+	//}
+	//defer func() {
+	//	if err := db.Close(); err != nil {
+	//		log.Fatalf("Error closing database connection: %v", err)
+	//	} else {
+	//		log.Printf("Database connection closed successfully")
+	//	}
+	//}()
 
-	defer func() {
-		if err := db.Close(); err != nil {
-			log.Fatalf("Error closing database connection: %v", err)
-		} else {
-			log.Printf("Database connection closed successfully")
-		}
-	}()
+	// Initialize the application
+	repo := auth.NewMapsCredRepo()
+	service := auth.NewServiceAuth(repo)
+	handler := auth.NewAuthHeader(service)
 
-	server := fasthttp.Server{
-		Handler: requestHandler,
-	}
-	if err := server.ListenAndServe(":8080"); err != nil {
-		log.Fatalf("Error in server: %v", err)
-	}
+	r := router.New()
+	r.POST("/signup", handler.SignUpHandler)
 
+	log.Println("Server is listening :8080 port")
+	if err := fasthttp.ListenAndServe(":8080", r.Handler); err != nil {
+		panic(err)
+	}
 	log.Println("App is running")
 }
 

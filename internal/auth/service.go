@@ -33,25 +33,25 @@ func CheckPasswordHash(password, hash string) bool {
 
 // Register or update credentials
 
-func (s *ServiceAuth) RegisterUser(c *CredsInput) (*Credentials, error) {
+func (s *ServiceAuth) RegisterUser(c *CredsInput) error {
 	_, err := s.repo.FindByEmail(c.Email)
 	if err == nil {
-		return nil, errors.New("user with this email already exists")
+		return errors.New("user with this email already exists")
 	}
 	if !errors.Is(err, ErrNotFound) {
-		return nil, err
+		return err
 	}
 
 	creds, err := NewCredentials(c.Email, c.PhoneNumber, c.Password)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	if err := s.repo.SaveCreds(creds); err != nil {
-		return nil, err
+		return err
 	}
 
-	return creds, nil
+	return nil
 }
 func (s *ServiceAuth) UpdatePassword(userid, oldPassword, newPassword string) error {
 	creds, err := s.repo.GetCredentialsByID(userid)
