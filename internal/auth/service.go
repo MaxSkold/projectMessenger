@@ -36,7 +36,7 @@ func CheckPasswordHash(password, hash string) bool {
 func (s *ServiceAuth) RegisterUser(c *CredsInput) error {
 	_, err := s.repo.FindByEmail(c.Email)
 	if err == nil {
-		return errors.New("user with this email already exists")
+		return errors.New("user with this Email already exists")
 	}
 	if !errors.Is(err, ErrNotFound) {
 		return err
@@ -59,8 +59,8 @@ func (s *ServiceAuth) UpdatePassword(userid, oldPassword, newPassword string) er
 		return err
 	}
 
-	if !CheckPasswordHash(oldPassword, creds.Password()) {
-		return errors.New("invalid current password")
+	if !CheckPasswordHash(oldPassword, creds.GetPassword()) {
+		return errors.New("invalid current Password")
 	}
 
 	hashedNew, err := HashPassword(newPassword)
@@ -69,15 +69,15 @@ func (s *ServiceAuth) UpdatePassword(userid, oldPassword, newPassword string) er
 	}
 
 	updatedCred := &Credentials{
-		userID:      creds.UserID(),
-		email:       creds.Email(),
-		phoneNumber: creds.PhoneNumber(),
-		password:    hashedNew,
+		UserID:      creds.GetUserID(),
+		Email:       creds.GetEmail(),
+		PhoneNumber: creds.GetPhoneNumber(),
+		Password:    hashedNew,
 	}
 
 	return s.repo.SaveCreds(updatedCred)
 }
 
-// User have forgotten the password ,_,
+// User have forgotten the Password ,_,
 
 // TODO ...

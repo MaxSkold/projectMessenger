@@ -1,8 +1,8 @@
 package auth
 
 import (
-	"database/sql"
 	"errors"
+	"gorm.io/gorm"
 	"sync"
 )
 
@@ -18,7 +18,7 @@ type (
 
 	PostgresCredRepo struct {
 		mu sync.RWMutex
-		db *sql.DB
+		db *gorm.DB
 	}
 	MapsCredRepo struct {
 		mu   sync.RWMutex
@@ -28,18 +28,10 @@ type (
 
 // ------------------ Work with PSQL database ----------------------
 
-func NewPostgresCredRepo(connStr string) (*PostgresCredRepo, error) {
-	db, err := sql.Open("postgres", connStr)
-	if err != nil {
-		return nil, err
-	}
-	if err = db.Ping(); err != nil {
-		return nil, err
-	}
-
+func NewPostgresCredRepo(db *gorm.DB) *PostgresCredRepo {
 	return &PostgresCredRepo{
 		db: db,
-	}, nil
+	}
 }
 
 func (psql *PostgresCredRepo) GetCredentialsByID(id string) (*Credentials, error) {
@@ -52,11 +44,21 @@ func (psql *PostgresCredRepo) SaveCreds(cred *Credentials) error {
 	psql.mu.Lock()
 	defer psql.mu.Unlock()
 
-	return nil
+	return psql.db.Create(&cred).Error
 }
 func (psql *PostgresCredRepo) FindByEmail(email string) (*Credentials, error) {
-	// TODO ...
-	return nil, nil
+	psql.mu.Lock()
+	defer psql.mu.Unlock()
+
+	var cred Credentials
+	if err := psql.db.Where("email = ?", email).First(&cred).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+
+	return &cred, nil
 }
 func (psql *PostgresCredRepo) RemoveCreds(id string) error {
 	return nil
@@ -84,7 +86,7 @@ func (repo *MapsCredRepo) SaveCreds(cred *Credentials) error {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
-	repo.repo[cred.UserID()] = cred
+	repo.repo[cred.GetUserID()] = cred
 	return nil
 }
 func (repo *MapsCredRepo) FindByEmail(email string) (*Credentials, error) {
@@ -92,7 +94,7 @@ func (repo *MapsCredRepo) FindByEmail(email string) (*Credentials, error) {
 	defer repo.mu.RUnlock()
 
 	for _, cred := range repo.repo {
-		if cred.Email() == email {
+		if cred.GetEmail() == email {
 			return cred, nil
 		}
 	}

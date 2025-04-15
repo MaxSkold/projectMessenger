@@ -5,19 +5,26 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"regexp"
+	"time"
 )
 
 type CredsInput struct {
 	Email       string `json:"email"`
 	PhoneNumber string `json:"phone_number"`
-	Password    string `json:"password"`
+	Password    string `json:"Password"`
 }
 
 type Credentials struct {
-	userID      string // Первичный ключ. id как паспорт в общем
-	email       string `validate:"required,email"`
-	phoneNumber string `validate:"omitempty,e164"`
-	password    string `validate:"required,min=8"`
+	UserID      string    `gorm:"column:user_id;primaryKey"`
+	Email       string    `validate:"required,email" gorm:"column:email;unique"`
+	PhoneNumber string    `validate:"omitempty,e164" gorm:"column:phone_number;unique"`
+	Password    string    `validate:"required,min=8" gorm:"column:passhash"`
+	CreatedAt   time.Time `gorm:"column:created_at;autoCreateTime"`
+	UpdatedAt   time.Time `gorm:"column:updated_at;autoUpdateTime"`
+}
+
+func (*Credentials) TableName() string {
+	return "auth.credentials"
 }
 
 // NewCredentials function create credentials for user
@@ -32,10 +39,10 @@ func NewCredentials(email, phoneNumber, password string) (*Credentials, error) {
 	})
 
 	creds := &Credentials{
-		userID:      uuid.New().String(),
-		email:       email,
-		phoneNumber: phoneNumber,
-		password:    password,
+		UserID:      uuid.New().String(),
+		Email:       email,
+		PhoneNumber: phoneNumber,
+		Password:    password,
 	}
 
 	if err := validate.Struct(creds); err != nil {
@@ -43,7 +50,7 @@ func NewCredentials(email, phoneNumber, password string) (*Credentials, error) {
 	}
 
 	var errHash error
-	if creds.password, errHash = HashPassword(password); errHash != nil {
+	if creds.Password, errHash = HashPassword(password); errHash != nil {
 		return nil, errHash
 	}
 
@@ -53,27 +60,27 @@ func NewCredentials(email, phoneNumber, password string) (*Credentials, error) {
 func (creds *Credentials) MarshalJSON() ([]byte, error) {
 	type safeCreds struct {
 		UserID      string `json:"user_id"`
-		Email       string `json:"email"`
+		Email       string `json:"Email"`
 		PhoneNumber string `json:"phone_number"`
 	}
 	return json.Marshal(&safeCreds{
-		UserID:      creds.userID,
-		Email:       creds.email,
-		PhoneNumber: creds.phoneNumber,
+		UserID:      creds.UserID,
+		Email:       creds.Email,
+		PhoneNumber: creds.PhoneNumber,
 	})
 }
 
 // Getters
 
-func (creds *Credentials) UserID() string {
-	return creds.userID
+func (creds *Credentials) GetUserID() string {
+	return creds.UserID
 }
-func (creds *Credentials) Email() string {
-	return creds.email
+func (creds *Credentials) GetEmail() string {
+	return creds.Email
 }
-func (creds *Credentials) PhoneNumber() string {
-	return creds.phoneNumber
+func (creds *Credentials) GetPhoneNumber() string {
+	return creds.PhoneNumber
 }
-func (creds *Credentials) Password() string {
-	return creds.password
+func (creds *Credentials) GetPassword() string {
+	return creds.Password
 }
