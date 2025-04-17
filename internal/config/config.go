@@ -1,13 +1,8 @@
 package config
 
 import (
-	"errors"
 	"fmt"
-	"github.com/joho/godotenv"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
-	"log"
-	"os"
+	"github.com/spf13/viper"
 )
 
 type DBConfig struct {
@@ -18,44 +13,27 @@ type DBConfig struct {
 	DBName   string
 }
 
-func LoadEnv() error {
-	err := godotenv.Load("./internal/config/.env")
-	if err != nil {
-		return errors.New("error loading .env file")
-	}
-	return nil
-}
-
-func GetEnv(key string) string {
-	return os.Getenv(key)
-}
-
 func NewDBConfig() (*DBConfig, error) {
-	err := LoadEnv()
-	if err != nil {
-		return nil, err
+	viper.SetConfigName("config")
+	viper.SetConfigType("yaml")
+	viper.AddConfigPath("configs")
+
+	if err := viper.ReadInConfig(); err != nil {
+		return nil, fmt.Errorf("error reading config file: %v", err)
 	}
 
 	return &DBConfig{
-		Host:     GetEnv("DB_HOST"),
-		Port:     GetEnv("DB_PORT"),
-		User:     GetEnv("DB_USER"),
-		Password: GetEnv("DB_PASSWORD"),
-		DBName:   GetEnv("DB_NAME"),
+		Host:     viper.GetString("database.host"),
+		Port:     viper.GetString("database.port"),
+		User:     viper.GetString("database.user"),
+		Password: viper.GetString("database.password"),
+		DBName:   viper.GetString("database.dbname"),
 	}, nil
 }
 
-func (dbConfig *DBConfig) Connect() (*gorm.DB, error) {
-	dsn := fmt.Sprintf(
+func (dbConfig *DBConfig) DSN() string {
+	return fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		dbConfig.Host, dbConfig.Port, dbConfig.User, dbConfig.Password, dbConfig.DBName,
 	)
-
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect to database: %w", err)
-	}
-
-	log.Println("Successfully connected to the database!")
-	return db, nil
 }
