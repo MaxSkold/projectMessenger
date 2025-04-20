@@ -11,15 +11,15 @@ import (
 func main() {
 	defer logger.InitLogger()()
 
-	db, err := connectDB()
+	dbAuth, err := connectDB()
 	if err != nil {
 		logger.Log.Fatalf("❌ Failed to connect to DB: %v", err)
 	}
 
 	r := router.New()
 
-	// Initialize the application
-	handlerAuth := server.StartAuthServer(db)
+	// Initialize the application UGKLywzWecwaPU4
+	handlerAuth := server.StartAuthServer(dbAuth)
 	auth.RegisterAuthRoutes(r, handlerAuth)
 
 	logger.Log.Infow("🌐 Starting server...", "port", 8080)

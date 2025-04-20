@@ -10,11 +10,10 @@ CREATE TABLE IF NOT EXISTS auth.credentials
     updated_at timestamp without time zone NOT NULL DEFAULT now(),
     CONSTRAINT credentials_pkey PRIMARY KEY (user_id),
     CONSTRAINT credentials_email_key UNIQUE (email),
-    CONSTRAINT chk_phone_number CHECK (phone_number::text ~ '^\+?[1-9]\d{1,14}$'::text)
+    CONSTRAINT chk_phone_number CHECK (phone_number IS NULL OR phone_number::text ~ '^\+?[1-9]\d{1,14}$'::text)
 )
 
     TABLESPACE pg_default;
 
 ALTER TABLE IF EXISTS auth.credentials
     OWNER to postgres;
-
